@@ -1,1 +1,1 @@
-# SVDD
+# Support Vector Data Description(SVDD)
