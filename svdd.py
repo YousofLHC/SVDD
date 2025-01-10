@@ -71,3 +71,26 @@ class SVDD(BaseEstimator, OutlierMixin):
         # Tolerance must be positive
         if not isinstance(self.tol, (int, float)) or self.tol <= 0:
             raise ValueError(f"Tolerance (tol) must be a strictly positive float. Got {self.tol}")
+    
+    def fit(self, X, y=None):
+        """
+        Fit the SVDD Model.
+
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, n_features)
+            Training data.
+        y : None
+            Ignored; SVDD is unsupervised.
+
+        Returns
+        -------
+        self : object
+            Returns the instance itself
+        """
+
+        # Validate the input parameters
+        self._validate_params()
+
+        # TODO: Add kernel matrix computation and optimizatio logic here
+        return self
