@@ -34,6 +34,8 @@ class SVDD(BaseEstimator, OutlierMixin):
         - Adds specific functionality for anomaly detection (e.g., `fit_predict`).
         - Identifies the class as an anomaly detection model within Scikit-learn's ecosystem.
         - Simplifies integration with Scikit-learn's evaluation tools.
+    - Implements support for `GridSearchCV` and `Pipeline` by providing compatible `get_params` and `set_params` methods.
+    - Designed to work seamlessly with Scikit-learn's tools and standards for hyperparameter tuning and model chaining.
     """
     def __init__(self, C=1.0, kernel='rbf', gamma='scale', degree=3, coef0=0.0, tol=1e-6, verbose=False):
         self.C       = C
@@ -95,7 +97,7 @@ class SVDD(BaseEstimator, OutlierMixin):
         self._validate_params()
 
         # Compute gamma if necessary
-        self.gamma = self._compute_gamma(X)
+        self.gamma_ = self._compute_gamma(X)
 
         # Compute the kernel matrix
         self.K_ = self._compute_kernel(X)
@@ -160,7 +162,7 @@ class SVDD(BaseEstimator, OutlierMixin):
             return self.kernel(X, Y)
         else:
             # Use Scikit-learn's pairwise_kernels for predefined kernels
-            return pairwise_kernels(X, Y, metric=self.kernel, gamma=self.gamma,
+            return pairwise_kernels(X, Y, metric=self.kernel, gamma=self.gamma_,
                                     degree=self.degree, coef0=self.coef0)
 
     def _solve_optimization(self, K, y):
@@ -257,3 +259,51 @@ class SVDD(BaseEstimator, OutlierMixin):
         """
         self.fit(X,y)
         return self.predict(X)
+    def get_params(self, deep = True):
+        """
+        Get parameters for this estimator.
+
+        Parameters
+        ----------
+        deep : bool, default=True
+            If True, will return the parameters for this estimator and 
+            contained subobjects that are estimators.
+
+        Returns
+        -------
+        params : dict
+            Parameter names mapped to their values.
+        """
+        return {
+            'C'       : self.C,
+            'kernel'  : self.kernel,
+            'gamma'   : self.gamma,
+            'degree'  : self.degree,
+            'coef0'   : self.coef0,
+            'tol'     : self.tol,
+            'verbose' : self.verbose
+        }
+    
+    def set_params(self, **params):
+        """
+        Set the parameters of this estimator.
+
+        Parameters
+        ----------
+        **params : dict
+            Estimator parameters.
+
+        Returns
+        -------
+        self : object
+            Returns self.
+        """
+        for key, value in params.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise ValueError(f"""Invalid parameter '{key}' for estimator SVDD.
+                                  Check the list of available parameters.
+                                  with `estimator.get_params().keys()`.""")
+        
+        return self
