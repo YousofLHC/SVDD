@@ -1,5 +1,6 @@
 from sklearn.base import BaseEstimator, OutlierMixin
 from sklearn.metrics.pairwise import pairwise_kernels
+import numpy as np
 
 class SVDD(BaseEstimator, OutlierMixin):
     """
@@ -149,5 +150,39 @@ class SVDD(BaseEstimator, OutlierMixin):
             return pairwise_kernels(X, Y, metric=self.kernel, gamma=self.gamma,
                                     degree=self.degree, coef0=self.coef0)
 
+    def _solve_optimization(self, K, y):
+        """
+        Solve the dual optimization problem using cvxopt.
 
+        Parameters
+        ----------
+        K : ndarray of shape (n_sample, n_sample)
+            The kernel matrix
+        y : ndarray of shape (n_sample, )
+            Labels or weights for the data points.
+        
+        Returns
+        -------
+        alphas : ndarray of shape (n_sample, )
+            The solution of the optimization problem
+        """
+        from cvxopt import matrix, solvers
+
+        n_samples = K.shape[0]
+
+        # Constructing the quadratic optimization problem
+        P = matrix(K + K.T) # Symmetric kernel matrix
+        q = matrix(-np.ones(n_samples, 1)) # Linear term
+        G = matrix(np.vstack([-np.eye(n_samples), np.eye(n_samples)])) # Inequality constraints
+        h = matrix(np.hstack( [np.zeros(n_samples), np.ones(n_samples), self.C] )) # Bounds
+        A = matrix(np.ones(1, n_samples)) # Equality constraint
+        b = matrix(1.0) # Equality constraint value
+
+        # Solve the quadratic program
+        solvers.options['show_progress'] = self.verbose
+        solution = solvers.qp(P, q, G, h, A, b)
+
+        # Extract the Lagrange multipliers (alphas)
+        alphas = np.ravel(solution['x'])
+        return alphas
 
