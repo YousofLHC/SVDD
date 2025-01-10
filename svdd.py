@@ -111,7 +111,7 @@ class SVDD(BaseEstimator, OutlierMixin):
         self.dual_coef_       = alphas[self.support_]
 
         # Compute center of the hypersphere
-        self.center_ =np.do(self.dual_coef_, self.support_vectors_)
+        self.center_ =np.dot(self.dual_coef_, self.support_vectors_)
 
         # Compute the radius of the hypersphere
         distances = np.dot(self.K_[self.support_], self.dual_coef_)
@@ -198,10 +198,10 @@ class SVDD(BaseEstimator, OutlierMixin):
 
         # Constructing the quadratic optimization problem
         P = matrix(K + K.T) # Symmetric kernel matrix
-        q = matrix(-np.ones(n_samples, 1)) # Linear term
+        q = matrix(-np.ones((n_samples, 1))) # Linear term
         G = matrix(np.vstack([-np.eye(n_samples), np.eye(n_samples)])) # Inequality constraints
         h = matrix(np.hstack( [np.zeros(n_samples), np.ones(n_samples)*self.C] )) # Bounds
-        A = matrix(np.ones(1, n_samples)) # Equality constraint
+        A = matrix(np.ones((1, n_samples))) # Equality constraint
         b = matrix(1.0) # Equality constraint value
 
         # Solve the quadratic program
