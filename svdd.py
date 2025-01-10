@@ -92,5 +92,30 @@ class SVDD(BaseEstimator, OutlierMixin):
         # Validate the input parameters
         self._validate_params()
 
+        # Compute gamma if necessary
+        self.gamma = self._compute_gamma(X)
         # TODO: Add kernel matrix computation and optimizatio logic here
         return self
+
+    def _compute_gamma(self, X):
+        """
+        Compute the gamma value based on the input data if gamma is 'scale' or 'auto'.
+
+        Parameters
+        ----------
+        X : ndarray of shape (n_sample, n_feature)
+            The input data.
+        
+        Returns
+        -------
+        gamma_value : float
+            The computed value.
+        """
+        if isinstance(self.gamma, str):
+            if self.gamma == 'scale':
+                return 1.0/(X.shape[1]*X.var()) if X.var() != 0 else 1.0
+            elif self.gamma == 'auto':
+                return 1.0/X.shape[1]
+            else:
+                raise ValueError(f"Gamma must be 'scale', 'auto', or a positive float. Got {self.gamma}")
+        return self.gamma
