@@ -111,11 +111,13 @@ class SVDD(BaseEstimator, OutlierMixin):
         self.dual_coef_       = alphas[self.support_]
 
         # Compute center of the hypersphere
-        self.center_ =np.dot(self.dual_coef_, self.support_vectors_)
+        self.center_ = np.dot(self.dual_coef_, self.support_vectors_)
 
         # Compute the radius of the hypersphere
-        distances = np.dot(self.K_[self.support_], self.dual_coef_)
-        self.radius_ = np.sqrt(np.max(distances))
+        # Select only relevant kernel values (support vectors to support vectors)
+        distances = np.dot(self.K_[self.support_][:, self.support_], self.dual_coef_)
+        self.radius_ = np.max(distances)
+
         return self
 
     def _compute_gamma(self, X):
@@ -211,31 +213,29 @@ class SVDD(BaseEstimator, OutlierMixin):
         # Extract the Lagrange multipliers (alphas)
         alphas = np.ravel(solution['x'])
         return alphas
+
     def decision_function(self, X):
         """
-        Compute the signed distance to the hypersphere boundary.
+        Compute the distance of each sample to the hypersphere boundary.
 
         Parameters
         ----------
-        X : ndarray of shape (n_sample, n_feauter)
+        X : ndarray of shape (n_samples, n_features)
             Input data.
-        
+
         Returns
         -------
-        distances : ndarray of shape (n_sample, )
-            Distances of each sample from hypersphere center. Positive
-            value indicate inlier, and negative values indicate outliers.
+        distances : ndarray of shape (n_samples,)
+            Distances of each sample to the hypersphere boundary.
         """
-        # Compute the kernel between input samples and support vectors
-        K = self._compute_kernel(X, self.support_vectors_)
+        # Compute distance from the center
+        distances = np.linalg.norm(X - self.center_, axis=1)**2 - self.radius_**2
+         # Ensure no negative distances
+        distances = np.maximum(distances, 0)  # حذف مقادیر منفی غیرمنطقی    
 
-        # Compute distances
-        distacnes  = np.sum(K*self.dual_coef_, axis=1)
-        distacnes -= self.radius_
-
-        return distacnes
+        return distances
     
-    def predict(self, X):
+   
         """
         Predict whether the data points are inliers or outliers.
 
@@ -252,6 +252,25 @@ class SVDD(BaseEstimator, OutlierMixin):
         distances = self.decision_function(X)
         return np.where(distances>=0, 1, -1)
 
+    def predict(self, X):
+        """
+        Predict whether a sample is an inlier or outlier.
+
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, n_features)
+            Input data.
+
+        Returns
+        -------
+        predictions : ndarray of shape (n_samples,)
+            Predictions: 1 for inliers, -1 for outliers.
+        """
+        # Use decision_function to classify points
+        distances = self.decision_function(X)
+        predictions = np.where(distances >= 0, 1, -1)
+        return predictions
+    
     def fit_predict(self, X, y = None):
         """
         Fit the model using the training data and return predictions.
