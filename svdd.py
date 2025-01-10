@@ -100,7 +100,20 @@ class SVDD(BaseEstimator, OutlierMixin):
         # Compute the kernel matrix
         self.K_ = self._compute_kernel(X)
 
-        # TODO: Add optimization logic here
+        # Solve optimization problem
+        alphas = self._solve_optimization(self.K_, y)
+
+        # Identify support vectors
+        self.support_         = np.where(alphas > self.tol)[0]
+        self.support_vectors_ = X[self.support_]
+        self.dual_coef_       = alphas[self.support_]
+
+        # Compute center of the hypersphere
+        self.center_ =np.do(self.dual_coef_, self.support_vectors_)
+
+        # Compute the radius of the hypersphere
+        distances = np.dot(self.K_[self.support_], self.dual_coef_)
+        self.radius_ = np.sqrt(np.max(distances))
         return self
 
     def _compute_gamma(self, X):
@@ -174,7 +187,7 @@ class SVDD(BaseEstimator, OutlierMixin):
         P = matrix(K + K.T) # Symmetric kernel matrix
         q = matrix(-np.ones(n_samples, 1)) # Linear term
         G = matrix(np.vstack([-np.eye(n_samples), np.eye(n_samples)])) # Inequality constraints
-        h = matrix(np.hstack( [np.zeros(n_samples), np.ones(n_samples), self.C] )) # Bounds
+        h = matrix(np.hstack( [np.zeros(n_samples), np.ones(n_samples)*self.C] )) # Bounds
         A = matrix(np.ones(1, n_samples)) # Equality constraint
         b = matrix(1.0) # Equality constraint value
 
@@ -185,4 +198,43 @@ class SVDD(BaseEstimator, OutlierMixin):
         # Extract the Lagrange multipliers (alphas)
         alphas = np.ravel(solution['x'])
         return alphas
+    def decision_function(self, X):
+        """
+        Compute the signed distance to the hypersphere boundary.
 
+        Parameters
+        ----------
+        X : ndarray of shape (n_sample, n_feauter)
+            Input data.
+        
+        Returns
+        -------
+        distances : ndarray of shape (n_sample, )
+            Distances of each sample from hypersphere center. Positive
+            value indicate inlier, and negative values indicate outliers.
+        """
+        # Compute the kernel between input samples and support vectors
+        K = self._compute_kernel(X, self.support_vectors_)
+
+        # Compute distances
+        distacnes  = np.sum(K*self.dual_coef_, axis=1)
+        distacnes -= self.radius_
+
+        return distacnes
+    
+    def predict(self, X):
+        """
+        Predict whether the data points are inliers or outliers.
+
+        Parameters
+        ----------
+        X : ndarray of shape (n_sample, n_feature)
+            Input data.
+
+        Returns
+        -------
+        labels : ndarray of shape (n_sample, )
+            Predicted labels: 1 for inliers, -1 for outliers
+        """
+        distances = self.decision_function(X)
+        return np.where(distances>=0, 1, -1)
