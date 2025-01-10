@@ -157,13 +157,24 @@ class SVDD(BaseEstimator, OutlierMixin):
         K : ndarray of shape (n_sample_X, n_sample_Y)
             The computed kernel matrix
         """
+        if Y is None:
+            Y = X # Default to set-similarity if Y is not provided
         if callable(self.kernel):
             # If a custom kernel function is provided
             return self.kernel(X, Y)
-        else:
-            # Use Scikit-learn's pairwise_kernels for predefined kernels
-            return pairwise_kernels(X, Y, metric=self.kernel, gamma=self.gamma_,
-                                    degree=self.degree, coef0=self.coef0)
+
+        # Define parameters specific to the selected kernel
+        params = {}
+        if self.kernel in {'poly', 'rbf', 'sigmoid'}:
+            params['gamma'] = self.gamma_
+        if self.kernel == 'poly':
+            params['degree']=self.degree
+            params['coef0']=self.coef0
+        if self.kernel == 'sigmoid':
+            params['coef0']=self.coef0
+
+        # Compute the kernel matrix
+        return pairwise_kernels(X, Y, metric=self.kernel, **params)
 
     def _solve_optimization(self, K, y):
         """
