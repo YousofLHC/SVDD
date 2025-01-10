@@ -1,4 +1,5 @@
 from sklearn.base import BaseEstimator, OutlierMixin
+from sklearn.metrics.pairwise import pairwise_kernels
 
 class SVDD(BaseEstimator, OutlierMixin):
     """
@@ -94,7 +95,11 @@ class SVDD(BaseEstimator, OutlierMixin):
 
         # Compute gamma if necessary
         self.gamma = self._compute_gamma(X)
-        # TODO: Add kernel matrix computation and optimizatio logic here
+
+        # Compute the kernel matrix
+        self.K_ = self._compute_kernel(X)
+
+        # TODO: Add optimization logic here
         return self
 
     def _compute_gamma(self, X):
@@ -119,3 +124,30 @@ class SVDD(BaseEstimator, OutlierMixin):
             else:
                 raise ValueError(f"Gamma must be 'scale', 'auto', or a positive float. Got {self.gamma}")
         return self.gamma
+    
+    def _compute_kernel(self, X, Y):
+        """
+        Compute kernel matrix using the specified kernel.
+
+        Parameters
+        ----------
+        X : ndarray of shape (n_sample_X, n_feature)
+            First input dataset
+        Y : ndarray of shape (n_sample_Y, n_feature), optional
+            Second input dataset. If None, Y is set to X.
+
+        Returns
+        -------
+        K : ndarray of shape (n_sample_X, n_sample_Y)
+            The computed kernel matrix
+        """
+        if callable(self.kernel):
+            # If a custom kernel function is provided
+            return self.kernel(X, Y)
+        else:
+            # Use Scikit-learn's pairwise_kernels for predefined kernels
+            return pairwise_kernels(X, Y, metric=self.kernel, gamma=self.gamma,
+                                    degree=self.degree, coef0=self.coef0)
+
+
+
