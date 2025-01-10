@@ -141,7 +141,7 @@ class SVDD(BaseEstimator, OutlierMixin):
                 raise ValueError(f"Gamma must be 'scale', 'auto', or a positive float. Got {self.gamma}")
         return self.gamma
     
-    def _compute_kernel(self, X, Y):
+    def _compute_kernel(self, X, Y=None):
         """
         Compute kernel matrix using the specified kernel.
 
