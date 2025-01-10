@@ -238,3 +238,22 @@ class SVDD(BaseEstimator, OutlierMixin):
         """
         distances = self.decision_function(X)
         return np.where(distances>=0, 1, -1)
+
+    def fit_predict(self, X, y = None):
+        """
+        Fit the model using the training data and return predictions.
+
+        Parameters
+        ----------
+        X : ndarray of shape (n_samples, n_features)
+            Training data.
+        y : None
+            Ignored, SVDD is unsupervised
+
+        Returns
+        -------
+        labels : ndarray of shape (n_samples, )
+            Predicted labels: 1 for inliers, -1 for outliers
+        """
+        self.fit(X,y)
+        return self.predict(X)
