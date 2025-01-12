@@ -97,7 +97,7 @@ class DecisionBoundaryVisualizer:
                         colors=['blue', 'black', 'red'], linestyles=['--', '-', '--'])
 
         # Plot data points
-        if y is None:
+        if y is not None:
             plt.scatter(X[:,0], X[:,1], c=y, cmap=self.cmap, edgecolors='k')
         else:
             plt.scatter(X[:,0], X[:,1], color='black', edgecolors='k')
