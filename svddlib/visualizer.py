@@ -27,3 +27,17 @@ class DecisionBoundaryVisualizer:
         self.svdd_model = svdd_model
         self.resolution = resolution
         self.cmap       = cmap
+
+    def plot_decision_boundary(self, X, y=None, title=None):
+        """
+        Plots the decision boundary of the SVDD model.
+
+        Parameters
+        ----------
+        X : ndarray
+            Input data (n_samples, 2)
+        y: ndarray, optional
+            Labels for data points. If provided, points are colored by labels.
+        title : str, optional
+            Title of plot.
+        """
