@@ -1,0 +1,45 @@
+SVDD_Project/
+│
+├── svddlib/                    # ماژول اصلی کتابخانه
+│   ├── __init__.py             # ورود به ماژول
+│   ├── svdd.py                 # پیاده‌سازی کلاس SVDD
+│   ├── visualizer.py           # کلاس DecisionBoundaryVisualizer
+│   ├── utils.py                # توابع کمکی
+│   ├── metrics.py              # متریک‌های ارزیابی مدل
+│
+├── experiments/                # اسکریپت‌های آزمایشی
+│   ├── experiment_01.py
+│   ├── experiment_02.py
+│
+├── notebooks/                  # Jupyter Notebooks
+│   ├── example_svdd.ipynb
+│   ├── example_visualizer.ipynb
+│
+├── tests/                      # تست‌های واحد
+│   ├── __init__.py
+│   ├── test_svdd.py
+│   ├── test_visualizer.py
+│   ├── test_utils.py
+│
+├── data/                       # داده‌های نمونه
+│   ├── sample_data.csv
+│   ├── real_data.csv
+│
+├── docs/                       # مستندات
+│   ├── index.md
+│   ├── usage.md
+│
+├── scripts/                    # ابزارهای مدیریتی
+│   ├── train_model.py
+│   ├── evaluate_model.py
+│   ├── plot_results.py
+│
+├── configs/                    # تنظیمات
+│   ├── default_config.json
+│   ├── experiment_config.json
+│
+├── requirements.txt            # لیست وابستگی‌ها
+├── setup.py                    # فایل نصب پکیج
+├── README.md                   # توضیحات کلی پروژه
+├── LICENSE                     # فایل مجوز
+└── .gitignore                  # فایل‌های نادیده گرفته شده توسط git
