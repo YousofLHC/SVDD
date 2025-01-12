@@ -1,8 +1,8 @@
 # test_svdd.py
 import numpy as np
 import pytest
-from svdd import SVDD
-
+#from svdd import SVDD
+from svddlib import SVDD
 def test_get_params():
     # بررسی مقادیر پیش‌فرض پارامترها
     model = SVDD(C=0.5, kernel='poly', gamma='scale', degree=3, coef0=1.0, tol=1e-4, verbose=False)
