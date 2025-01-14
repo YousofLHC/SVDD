@@ -251,6 +251,7 @@ class SVDD(BaseEstimator, OutlierMixin):
 
         # Extract the Lagrange multipliers (alphas)
         alphas = np.ravel(solution['x'])
+        alphas[alphas < self.tol] = 0 # Set very small alphas to zero
         return alphas
 
     def decision_function(self, X):
