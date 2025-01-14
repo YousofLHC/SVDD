@@ -97,7 +97,8 @@ class SVDD(BaseEstimator, OutlierMixin):
         """
         # Validate and preprocess inputs
         X, y = self._check_X_y(X,y)
-
+        self.X = X
+        self.y = y
         # Validate the input parameters
         self._validate_params()
 
@@ -109,16 +110,25 @@ class SVDD(BaseEstimator, OutlierMixin):
 
         # Solve optimization problem
         alphas = self._solve_optimization(self.K_, y)
-
+        self.alpha = alphas
         # Identify support vectors
         self.support_         = np.where(alphas > self.tol)[0]
         self.support_vectors_ = X[self.support_]
         self.dual_coef_       = alphas[self.support_]
 
         # Compute center of the hypersphere
-        self.center_ = np.dot(self.dual_coef_, self.support_vectors_)
-
+        #self.center_ = np.dot(self.dual_coef_, self.support_vectors_)
+        self.center_ = np.dot(self.alpha.T, self.X)
+        self.offset  = np.sum(np.multiply(np.dot(self.alpha, self.alpha.T), self.K_))
         # Compute the radius of the hypersphere
+        tmp_5 = np.dot(np.ones((self.X.shape[0],1)), self.alpha.reshape(1,-1))
+        tmp_6 = np.multiply(tmp_5, self.K_)
+        tmp_  = -2*np.sum(tmp_6, axis=1, keepdims=True)
+        self.radius_ = np.sqrt(
+            np.mean(np.diag(self.K_)[self.support_])
+            + self.offset
+            + np.mean(tmp_[self.support_, 0])
+        )
         # Select only relevant kernel values (support vectors to support vectors)
         distances = np.dot(self.K_[self.support_][:, self.support_], self.dual_coef_)
         self.radius_ = np.max(distances)
