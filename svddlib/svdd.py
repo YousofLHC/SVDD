@@ -226,6 +226,7 @@ class SVDD(BaseEstimator, OutlierMixin):
             The kernel matrix
         y : ndarray of shape (n_sample, )
             Labels or weights for the data points.
+            but included for future flexibility (e.g, hybrid SVDD variants)
         
         Returns
         -------
