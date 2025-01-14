@@ -1,5 +1,6 @@
 from sklearn.base import BaseEstimator, OutlierMixin
 from sklearn.metrics.pairwise import pairwise_kernels
+from sklearn.utils.validation import check_X_y, check_array
 import numpy as np
 
 class SVDD(BaseEstimator, OutlierMixin):
@@ -37,7 +38,9 @@ class SVDD(BaseEstimator, OutlierMixin):
     - Implements support for `GridSearchCV` and `Pipeline` by providing compatible `get_params` and `set_params` methods.
     - Designed to work seamlessly with Scikit-learn's tools and standards for hyperparameter tuning and model chaining.
     """
-    def __init__(self, C=1.0, kernel='rbf', gamma='scale', degree=3, coef0=0.0, tol=1e-6, verbose=False):
+    def __init__(self, C=1.0, kernel='rbf', gamma='scale',
+                 degree=3, coef0=0.0, tol=1e-6, verbose=False):
+        
         self.C       = C
         self.kernel  = kernel
         self.gamma   = gamma
@@ -92,6 +95,8 @@ class SVDD(BaseEstimator, OutlierMixin):
         self : object
             Returns the instance itself
         """
+        # Validate and preprocess inputs
+        X, y = self._check_X_y(X,y)
 
         # Validate the input parameters
         self._validate_params()
@@ -178,6 +183,39 @@ class SVDD(BaseEstimator, OutlierMixin):
         # Compute the kernel matrix
         return pairwise_kernels(X, Y, metric=self.kernel, **params)
 
+    def _check_X_y(self, X, y=None):
+        """
+        Validate and preprocess input data and  labels.
+
+        Parameters
+        ----------
+        X : np.ndarray of shape (n_samples, n_features)
+            Input data.
+        y : None or np.ndarray of shape (n_samples, )
+            Target labels. If None, it's assumed that SVDD is unsuprevised.
+        
+        Returns
+        -------
+        X : np.ndarray
+            Validate and preprocessed input data.
+        y : np.ndarray or None
+            Validate target labels, or None if not provided
+        """
+        # Check if y is provided
+        if y is None:
+            y = np.ones(X.shape[0]) # Default to all 1s for unsupervised learning
+        
+        # Use check_X_y to validate and standardize inputs
+        X, y = check_X_y(X, y, accept_sparse=False, ensure_2d=True,
+                         dtype=np.float64, ensure_min_samples=2)
+
+        # Check that labels are binary (-1 or 1)
+        unique_labels = np.unique(y)
+        if not np.all(np.isin(unique_labels, [1,-1])):
+            raise ValueError(f"Labels must be binary (-1 or 1). Got {unique_labels}")
+        
+        return X, y
+    
     def _solve_optimization(self, K, y):
         """
         Solve the dual optimization problem using cvxopt.
@@ -266,6 +304,8 @@ class SVDD(BaseEstimator, OutlierMixin):
         predictions : ndarray of shape (n_samples,)
             Predictions: 1 for inliers, -1 for outliers.
         """
+        # Validate 
+        X = check_array(X, ensure_2d=True, dtype=np.float64)
         # Use decision_function to classify points
         distances = self.decision_function(X)
         predictions = np.where(distances >= 0, 1, -1)
@@ -287,6 +327,8 @@ class SVDD(BaseEstimator, OutlierMixin):
         labels : ndarray of shape (n_samples, )
             Predicted labels: 1 for inliers, -1 for outliers
         """
+        # Validate an preprocess inputs
+        X,y = self._check_X_y(X, y)
         self.fit(X,y)
         return self.predict(X)
     def get_params(self, deep = True):
