@@ -96,7 +96,7 @@ class SVDD(BaseEstimator, OutlierMixin):
             Returns the instance itself
         """
         # Validate and preprocess inputs
-        X, y = self._check_X_y(X,y)
+        X, y = self._check_X_y(X,y) # * X_(n,m),y=None --> X_(n,m), y of ones_(n,)
         self.X = X
         self.y = y
         # Validate the input parameters
@@ -106,9 +106,10 @@ class SVDD(BaseEstimator, OutlierMixin):
         self.gamma_ = self._compute_gamma(X)
 
         # Compute the kernel matrix
-        self.K_ = self._compute_kernel(X)
+        self.K_ = self._compute_kernel(X) # * self.K_ = k(X,X)
 
-        # Solve optimization problem
+        # Solve optimization problem 
+        # * Pass k(x,x) of shape (n,n) and y of ones (n,)
         alphas = self._solve_optimization(self.K_, y)
         self.alpha = alphas
         # Identify support vectors
@@ -249,6 +250,7 @@ class SVDD(BaseEstimator, OutlierMixin):
 
         # Constructing the quadratic optimization problem
         P = matrix(K + K.T) # Symmetric kernel matrix
+        # ? check if q is correct? q==diag(K)?
         q = matrix(-np.ones((n_samples, 1))) # Linear term
         G = matrix(np.vstack([-np.eye(n_samples), np.eye(n_samples)])) # Inequality constraints
         h = matrix(np.hstack( [np.zeros(n_samples), np.ones(n_samples)*self.C] )) # Bounds
@@ -279,28 +281,28 @@ class SVDD(BaseEstimator, OutlierMixin):
             Distances of each sample to the hypersphere boundary.
         """
         # Compute distance from the center
-        distances = np.linalg.norm(X - self.center_, axis=1)**2 - self.radius_**2
-         # Ensure no negative distances
-        distances = np.maximum(distances, 0)  # حذف مقادیر منفی غیرمنطقی    
+        # compute the distance between the samples and the center
+        K = self._compute_kernel(X, self.X)
+        K_ = self._compute_kernel(X, X)
+        tmp_1 = np.dot(np.ones((X.shape[0], 1), dtype=np.int64), self.alpha.reshape(-1,1).T)
+        tmp_2 = np.multiply(tmp_1, K)
+        tmp_ = -2*np.sum(tmp_2, axis=1, keepdims=True)  
+        distance = np.sqrt(np.mat(np.diag(K_)).T+self.offset+tmp_)
+        distance = np.asarray(distance)
+        print("Distances:", distance)
+        print("Type:", type(distance))
+        print("Shape:", np.shape(distance))
+        return distance.ravel()
+        # TODO Kernelized the distance 290 
+        distances = self._compute_kernel(X-self.center_)-self.radius_ #np.linalg.norm(X - self.center_, axis=1)**2 - self.radius_**2 
+            # Ensure no negative distances
+        # ? Decision based on self.radius - distance 314
+        distances = np.maximum(distances, 0)   
+        print("Distances:", distances)
+        print("Type:", type(distances))
+        print("Shape:", np.shape(distances))
 
         return distances
-    
-   
-        """
-        Predict whether the data points are inliers or outliers.
-
-        Parameters
-        ----------
-        X : ndarray of shape (n_sample, n_feature)
-            Input data.
-
-        Returns
-        -------
-        labels : ndarray of shape (n_sample, )
-            Predicted labels: 1 for inliers, -1 for outliers
-        """
-        distances = self.decision_function(X)
-        return np.where(distances>=0, 1, -1)
 
     def predict(self, X):
         """
