@@ -53,24 +53,24 @@ def test_predict():
     assert len(predictions) == len(X)
     assert set(predictions.ravel()).issubset({1, -1})
 
-#def test_decision_function():
-#    """
-#    تست متد decision_function برای اطمینان از محاسبات فاصله‌ها.
-#    """
-#    # داده‌های نمونه
-#    X = np.array([[1, 2], [2, 3], [3, 4], [8, 9]])
-#    model = SVDD(C=0.9, kernel='linear', gamma='scale', verbose=False)
-#
-#    # اجرا و محاسبه فاصله‌ها
-#    model.fit(X)
-#    distances = model.decision_function(X)
-#
-#    # بررسی تعداد و مقادیر فاصله‌ها
-#    assert len(distances) == len(X)
-#    assert np.all(np.isfinite(distances))
-#    assert all(isinstance(d, (float, int)) for d in distances)
-#    assert np.min(distances) >= -1e-3, f"Unexpected negative distance: {np.min(distances)}"
-#
+def test_decision_function():
+    """
+    تست متد decision_function برای اطمینان از محاسبات فاصله‌ها.
+    """
+    # داده‌های نمونه
+    X = np.array([[1, 2], [2, 3], [3, 4], [8, 9]])
+    model = SVDD(C=0.9, kernel='linear', gamma='scale', verbose=False)
+
+    # اجرا و محاسبه فاصله‌ها
+    model.fit(X)
+    distances = model.decision_function(X)
+
+    # بررسی تعداد و مقادیر فاصله‌ها
+    assert len(distances) == len(X)
+    assert np.all(np.isfinite(distances))
+    assert all(isinstance(d, (float, int)) for d in distances)
+    assert np.min(distances) >= -1e-3, f"Unexpected negative distance: {np.min(distances)}"
+
 #def test_simple_2d_data():
 #    """
 #    Test SVDD with a simple 2D
