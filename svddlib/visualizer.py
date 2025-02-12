@@ -105,7 +105,7 @@ class DecisionBoundaryVisualizer:
 
         # Calculate decision scores
         distances = self.svdd_model.decision_function(grid)
-        decision_scores = self.svdd_model.radius_ - distances.reshape(xx.shape)
+        decision_scores =  distances.reshape(xx.shape) - self.svdd_model.radius_
 
         # Plot decision boundary
         plt.figure(figsize=(10,8))
